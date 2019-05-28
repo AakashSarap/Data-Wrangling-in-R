@@ -1,0 +1,94 @@
+---
+title: "COAL CONSUMPTION"
+author: "Aakash Sarap"
+date: "5/28/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+I have performed Data Wrangling in Rstudio using tidyverse, ggplot2 libraries to identify trends or patterns in coal consumption.
+The dataset is retrieved from http://594442.youcanlearnit.net/coal.csv. Our main purpose is to prepare the dataset for analysis.
+
+Business Question: Study coal consumption patterns from 1980 to 2010 and identify trends.
+
+# Data Preparation
+
+I am going to use tidyverse library to perform data wrangling operations. Now let’s import data and have a look at the variables
+
+```{r}
+library(tidyverse)
+```
+
+Import data 
+```{r}
+coal <- read.csv('http://594442.youcanlearnit.net/coal.csv' , skip = 2)
+glimpse(coal)
+```
+
+```{r}
+colnames(coal)[1] <- 'region'
+glimpse(coal)
+```
+
+Summary of dataset: 
+```{r}
+summary(coal)
+```
+
+Here every thing is character datatype, i am expecting numeric data type
+```{r}
+View(coal)
+```
+
+The dataset is wide. A good rule of thumb is to create wide dataset to long.  I am going to use [gather] function.Converting wide dataset to long dataset below.
+```{r}
+coal_long <- gather(coal, Year, Coal_consumption , -region )
+glimpse(coal_long)
+```
+
+All the variables are of Character datatype, I will convert year as integer datatype and coal_consumption = numeric.
+```{r}
+coal_long$Year <- as.integer(coal_long$Year)
+summary(coal_long)
+```
+
+```{r}
+coal_long$Coal_consumption <- as.numeric(coal_long$Coal_consumption)
+```
+
+Now, I can see that the regions variables has to be classified as it consists of many values which are countries, world and continents. For our analysis, we will simplify it to continent levels and call them regions. I can also see world as a row. We will keep this record for now and will not delete it.
+```{r}
+unique(coal_long$region)
+noncountries <- c("North America" ,"Central & South America" ,"Antarctica",
+                  "Europe" , "Eurasia","Middle East","Africa","Asia & Oceania",
+                  "World" )
+matches <- which(!is.na(match(coal_long$region, noncountries))) #list of rows with noncountry values
+summary(coal_long)
+```
+
+```{r}
+coal_country <- coal_long[-matches,]
+coal_region <- coal_long[matches,]
+unique(coal_country)
+```
+
+```{r}
+unique(coal_region)
+```
+
+Now we have successfully prepared our data for analysis
+
+Let’s use ggplot2 library to visualize
+ library(ggplot2)
+ ggplot(data = coal_region , mapping=aes(x = Year , y = Coal_consumption))+
+  geom_line(mapping = aes(color=region))
+
+# Insights
+
+From the line plot, we can see the trends in coal consumption in different regions of the world. From figure 1, we can see that the overall coal consumption has increased over the years.
+Asia & Oceania has highest coal consumption and thus the trend line for coal consumption has peaked despite other regions having low/ consumption. 
+
